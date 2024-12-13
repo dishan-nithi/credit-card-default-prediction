@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/ASUS/Documents/FYP/credit-card-default-prediction/mlruns/0/e859686493f345ce9ed8116b717fcaa6/artifacts
+end_time: 1734081101530
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: e859686493f345ce9ed8116b717fcaa6
+run_name: beautiful-donkey-353
+run_uuid: e859686493f345ce9ed8116b717fcaa6
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1734081098612
+status: 3
+tags: []
+user_id: ASUS

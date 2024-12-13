@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/ASUS/Documents/FYP/credit-card-default-prediction/mlruns/0/50a0bc5eeac841568dfecb0e98655394/artifacts
+end_time: 1734080647931
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 50a0bc5eeac841568dfecb0e98655394
+run_name: mercurial-bear-932
+run_uuid: 50a0bc5eeac841568dfecb0e98655394
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1734080644735
+status: 3
+tags: []
+user_id: ASUS

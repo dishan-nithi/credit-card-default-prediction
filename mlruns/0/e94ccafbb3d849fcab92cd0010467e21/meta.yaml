@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/ASUS/Documents/FYP/credit-card-default-prediction/mlruns/0/e94ccafbb3d849fcab92cd0010467e21/artifacts
+end_time: 1734080367822
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: e94ccafbb3d849fcab92cd0010467e21
+run_name: thoughtful-squid-380
+run_uuid: e94ccafbb3d849fcab92cd0010467e21
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1734080365054
+status: 3
+tags: []
+user_id: ASUS
