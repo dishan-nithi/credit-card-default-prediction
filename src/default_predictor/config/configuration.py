@@ -1,6 +1,6 @@
 from default_predictor.constants import *
 from default_predictor.utils.common import read_yaml, create_directories, get_size
-from default_predictor.entity.config_entity import (DataIngestionConfig, DataValidationConfig)
+from default_predictor.entity.config_entity import DataIngestionConfig, DataValidationConfig, DataTransformationConfig, ModelTrainerConfig
 
 class ConfigurationManager:
     def __init__(
@@ -42,3 +42,44 @@ class ConfigurationManager:
         )
         
         return data_validation_config
+    
+    def get_data_transformation_config(self) -> DataTransformationConfig:
+        config = self.config.data_transformation
+        
+        create_directories([config.root_dir])
+        
+        data_transformation_config = DataTransformationConfig(
+            root_dir=config.root_dir,
+            data_path=config.data_path
+        )
+        
+        return data_transformation_config
+    
+    def get_model_trainer_config(self) -> ModelTrainerConfig:
+        config = self.config.model_trainer
+        params = self.params.XGBoost
+        schema = self.schema.TARGET_COLUMN
+        
+        create_directories([config.root_dir])
+        
+        model_trainer_config = ModelTrainerConfig(
+            root_dir = config.root_dir,
+            train_data_path = config.train_data_path,
+            test_data_path = config.test_data_path,
+            model_name = config.model_name,
+            scale_pos_weight = params.scale_pos_weight,
+            max_depth = params.max_depth,
+            min_child_weight = params.min_child_weight,
+            subsample = params.subsample,
+            colsample_bytree = params.colsample_bytree,
+            objective = params.objective,
+            eta = params.eta,
+            gamma = params.gamma,
+            n_estimators = params.n_estimators ,
+            enable_categorical = params.enable_categorical,
+            eval_metric = params.eval_metric,
+            alpha = params.alpha,
+            target_column = schema.name
+        )
+        
+        return model_trainer_config
