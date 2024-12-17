@@ -14,6 +14,8 @@ class DataValidation:
             data = pd.read_csv(self.config.unzip_data_dir)
             all_columns = list(data.columns)
             all_schema = self.config.all_schema.keys()
+            with open(self.config.status_file, 'w') as f:
+                f.write(f"Validation status: Not Started")
             
             for col in all_columns:
                 if col not in all_schema:

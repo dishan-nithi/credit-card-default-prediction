@@ -29,10 +29,12 @@ class ConfigurationManager:
         
         return data_ingestion_config
     
-    def get_data_validation_config(self) -> DataValidationConfig:
+    def get_data_validation_config(self,unzip_data_dir=None) -> DataValidationConfig:
         config = self.config.data_validation
         schema = self.schema.COLUMNS
         create_directories([config.root_dir])
+        
+        unzip_data_dir = unzip_data_dir if unzip_data_dir else config.unzip_data_dir
         
         data_validation_config = DataValidationConfig(
             root_dir=config.root_dir,
