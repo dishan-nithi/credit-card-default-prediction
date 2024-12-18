@@ -8,6 +8,7 @@ from ensure import ensure_annotations
 from box import ConfigBox
 from pathlib import Path
 from typing import Any
+import pandas as pd
 
 
 @ensure_annotations
@@ -132,3 +133,39 @@ def get_size(path: Path) -> str:
     
     size_in_kb = round(os.path.getsize(path)/1024)
     return f"~ {size_in_kb} KB"
+
+@ensure_annotations
+def check_schema(path_of_csv: Path, schema: dict , path_of_status_file: Path) -> bool:
+    """
+    Validates the schema of the csv
+    
+    Args:
+        path_of_csv (Path): The path of the CSV
+        path_of_status_file (Path): The path of the status file
+        
+    Returns:
+        str: If the CSV is validated
+    
+    """
+    
+    data = pd.read_csv(path_of_csv)
+    all_columns = list(data.columns)
+    all_schema = schema.keys()
+    
+    validation_status = None
+    
+    with open(path_of_status_file, 'w') as f:
+        f.write(f"Validation status: Not Started")
+
+        for col in all_columns:
+            if col not in all_schema:
+                validation_status = False
+                with open(path_of_status_file, 'w') as f:
+                    f.write(f"Validation status:  {validation_status}")
+            else:
+                validation_status = True
+                with open(path_of_status_file, 'w') as f:
+                    f.write(f"Validation status: {validation_status}")
+        return validation_status
+    
+    
