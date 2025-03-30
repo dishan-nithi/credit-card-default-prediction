@@ -9,6 +9,7 @@ from box import ConfigBox
 from pathlib import Path
 from typing import Any
 import pandas as pd
+from streamlit.components.v1 import html
 
 
 @ensure_annotations
@@ -37,102 +38,7 @@ def read_yaml(path_to_yaml: Path) -> ConfigBox:
     except Exception as e:
         raise e
     
-@ensure_annotations
-def create_directories(path_to_directories: list, verbose=True):
-    """
-    Create a list of directories
-    
-    Args:
-        path_to_directories (list): A list of path to directories
-        
-    """
-    
-    for path in path_to_directories:
-        os.makedirs(path, exist_ok=True)
-        if verbose:
-            logger.info(f"created directory at {path}")
-            
-@ensure_annotations
-def save_json(path: Path, data: dict):
-    """
-    Save the JSON file
-    
-    Args:
-        path (Path): Path of the JSON file
-        data (Dict): Data to tbe saved in JSON
-        
-    """
-    
-    with open(path, "w") as f:
-        json.dump(data, f, indent=4)
-        
-    logger.info(f"JSON file saved at {path}")
 
-@ensure_annotations
-def load_json(path: Path) -> ConfigBox:
-    """
-    Load the JSON files
-    
-    Args:
-        path (Path): Path to the JSON file
-        
-    Returns:
-        Configbox: Data as class attributes instead of dictionary
-    
-    """
-    
-    with open(path) as f:
-        content=json.load(f)
-        
-    logger.info(f"JSON file loaded succesfully from {path}")
-    return ConfigBox(content)
-
-@ensure_annotations
-def save_bin(data: Any, path: Path):
-    """
-    Save the binary files
-    
-    Args:
-        data (Any): Data to be saved as binary file
-        path (Path): Path to the binary file
-    
-    """
-    
-    joblib.dump(value=data, filename=path)
-    logger.info(f"Binary file saved at: {path}")
-
-@ensure_annotations
-def load_bin(path: Path) -> Any:
-    """
-    Load the binary files
-    
-    Args:
-        path (Path): Path to the binary file
-        
-    Returns:
-        Any: The object stored in the file
-    
-    """
-    
-    data = joblib.load(path)
-    logger.info(f"Binary file loaded from {path}")
-    return data
-
-@ensure_annotations
-def get_size(path: Path) -> str:
-    """
-    Get the size in KB
-    
-    Args:
-        path (Path): Path of the file
-        
-    Returns:
-        str: The size in KB
-    
-    """
-    
-    size_in_kb = round(os.path.getsize(path)/1024)
-    return f"~ {size_in_kb} KB"
 
 @ensure_annotations
 def check_schema(path_of_csv: Path, schema: dict , path_of_status_file: Path) -> bool:
@@ -157,15 +63,75 @@ def check_schema(path_of_csv: Path, schema: dict , path_of_status_file: Path) ->
     with open(path_of_status_file, 'w') as f:
         f.write(f"Validation status: Not Started")
 
-        for col in all_columns:
-            if col not in all_schema:
-                validation_status = False
-                with open(path_of_status_file, 'w') as f:
-                    f.write(f"Validation status:  {validation_status}")
-            else:
-                validation_status = True
-                with open(path_of_status_file, 'w') as f:
-                    f.write(f"Validation status: {validation_status}")
-        return validation_status
+    for col in all_columns:
+        if col not in all_schema:
+            validation_status = False
+            with open(path_of_status_file, 'w') as f:
+                f.write(f"Validation status:  {validation_status}")
+        else:
+            validation_status = True
+            with open(path_of_status_file, 'w') as f:
+                f.write(f"Validation status: {validation_status}")
+    return validation_status
+
+@ensure_annotations
+def months_since_last(row):
+    for i, value in enumerate(row):
+        if value>0:
+            return i
+    return len(row) 
     
+@ensure_annotations
+def clean_df(path_of_csv: Path) -> pd.DataFrame:
+    """
+    cleaning the submitted pandas dataframe.
+    """
+    
+    data = pd.read_csv(path_of_csv)
+    
+    #remove nature of business columns
+    data = data.loc[:, ~data.columns.str.startswith('NATURE')]
+    
+    #reduce dimensions by adding fee together
+    data['LATE_PAY_FEE']=data['LATE_PAY_FEE_1']+data['LATE_PAY_FEE_2']+data['LATE_PAY_FEE_3']+data['LATE_PAY_FEE_4']+data['LATE_PAY_FEE_5']+data['LATE_PAY_FEE_6']
+    data['OVER_LIMIT_FEE']=data['OVER_LIMIT_FEE_1']+data['OVER_LIMIT_FEE_2']+data['OVER_LIMIT_FEE_3']+data['OVER_LIMIT_FEE_4']+data['OVER_LIMIT_FEE_5']+data['OVER_LIMIT_FEE_6']
+    data=data.drop(columns=['LATE_PAY_FEE_1','LATE_PAY_FEE_2','LATE_PAY_FEE_3','LATE_PAY_FEE_4','LATE_PAY_FEE_5','LATE_PAY_FEE_6'])
+    data=data.drop(columns=['OVER_LIMIT_FEE_1','OVER_LIMIT_FEE_2','OVER_LIMIT_FEE_3','OVER_LIMIT_FEE_4','OVER_LIMIT_FEE_5','OVER_LIMIT_FEE_6'])
+    
+    #remove Ascore
+    data=data.drop(columns=['A_SCORE_VALUE'])
+    
+    #get average of total_os due to high correlation
+    data['TOTAL_OS']=(data['TOTAL_OS_1']+data['TOTAL_OS_2']+data['TOTAL_OS_3']+data['TOTAL_OS_4']+data['TOTAL_OS_5']+data['TOTAL_OS_6'])/6
+    data=data.drop(columns=['TOTAL_OS_1','TOTAL_OS_2','TOTAL_OS_3','TOTAL_OS_4','TOTAL_OS_5','TOTAL_OS_6'])
+    
+    #adding time series features
+    spend_columns = ['TOT_SPEND_AMT_1', 'TOT_SPEND_AMT_2', 'TOT_SPEND_AMT_3', 'TOT_SPEND_AMT_4', 'TOT_SPEND_AMT_5', 'TOT_SPEND_AMT_6']
+    pay_columns = ['PAYMENT_AMT_1', 'PAYMENT_AMT_2', 'PAYMENT_AMT_3', 'PAYMENT_AMT_4', 'PAYMENT_AMT_5', 'PAYMENT_AMT_6']
+    settler_columns = ['REV_SETT_1_SETTLER', 'REV_SETT_2_SETTLER', 'REV_SETT_3_SETTLER', 'REV_SETT_4_SETTLER', 'REV_SETT_5_SETTLER', 'REV_SETT_6_SETTLER']
+    revolver_columns = ['REV_SETT_1_REVOLVER', 'REV_SETT_2_REVOLVER', 'REV_SETT_3_REVOLVER', 'REV_SETT_4_REVOLVER', 'REV_SETT_5_REVOLVER', 'REV_SETT_6_REVOLVER']
+    
+    df_3_spend = data[spend_columns]
+    df_3_pay = data[pay_columns]
+    df_3_set = data[settler_columns]
+    df_3_rev = data[revolver_columns]
+    
+    data['SPENDING_MONTHS'] = (df_3_spend>0).sum(axis=1)
+    data['PAYMENT_MONTHS'] = (df_3_pay>0).sum(axis=1)
+    
+    data['MONTHS_SINCE_LAST_SPEND'] = df_3_spend.gt(0).idxmax(axis=1).apply(lambda x: int(x.split('_')[-1]) - 1)
+    data['MONTHS_SINCE_LAST_SPEND'] = data['MONTHS_SINCE_LAST_SPEND'].where(df_3_spend.gt(0).any(axis=1), len(spend_columns))
+    
+    data['MONTHS_SINCE_LAST_PAY'] = df_3_pay.gt(0).idxmax(axis=1).apply(lambda x: int(x.split('_')[-1]) - 1)
+    data['MONTHS_SINCE_LAST_PAY'] = data['MONTHS_SINCE_LAST_PAY'].where(df_3_pay.gt(0).any(axis=1), len(pay_columns))
+    
+    data['MONTHS_SINCE_LAST_SETTLER'] = df_3_set.gt(0).idxmax(axis=1).apply(lambda x: int(x.split('_')[2]) - 1)
+    data['MONTHS_SINCE_LAST_SETTLER'] = data['MONTHS_SINCE_LAST_SETTLER'].where(df_3_set.gt(0).any(axis=1), len(settler_columns))
+    
+    data['MONTHS_SINCE_LAST_REVOLVER'] = df_3_rev.gt(0).idxmax(axis=1).apply(lambda x: int(x.split('_')[2]) - 1)
+    data['MONTHS_SINCE_LAST_REVOLVER'] = data['MONTHS_SINCE_LAST_REVOLVER'].where(df_3_rev.gt(0).any(axis=1), len(revolver_columns))
+
+    return data
+        
+
     

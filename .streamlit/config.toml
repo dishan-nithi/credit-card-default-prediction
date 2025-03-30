@@ -1,0 +1,9 @@
+[client]
+showSidebarNavigation = false
+
+[logger]
+level = "info"
+messageFormat = "%(asctime)s %(message)s"
+
+[theme]
+base = "dark"
