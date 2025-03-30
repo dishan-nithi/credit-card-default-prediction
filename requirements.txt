@@ -9,9 +9,8 @@ matplotlib
 pyYAML
 tqdm
 joblib
-Flask
-Flask-Cors
-mlflow==2.2.2
+shap==0.46.0
 python-box==6.0.2
 ensure==1.0.2 
+streamlit==1.41.1
 -e .
