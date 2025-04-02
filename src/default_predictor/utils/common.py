@@ -103,7 +103,7 @@ def clean_df(path_of_csv: Path) -> pd.DataFrame:
     
     #get average of total_os due to high correlation
     data['TOTAL_OS']=(data['TOTAL_OS_1']+data['TOTAL_OS_2']+data['TOTAL_OS_3']+data['TOTAL_OS_4']+data['TOTAL_OS_5']+data['TOTAL_OS_6'])/6
-    data=data.drop(columns=['TOTAL_OS_1','TOTAL_OS_2','TOTAL_OS_3','TOTAL_OS_4','TOTAL_OS_5','TOTAL_OS_6'])
+    
     
     #adding time series features
     spend_columns = ['TOT_SPEND_AMT_1', 'TOT_SPEND_AMT_2', 'TOT_SPEND_AMT_3', 'TOT_SPEND_AMT_4', 'TOT_SPEND_AMT_5', 'TOT_SPEND_AMT_6']
@@ -130,6 +130,19 @@ def clean_df(path_of_csv: Path) -> pd.DataFrame:
     
     data['MONTHS_SINCE_LAST_REVOLVER'] = df_3_rev.gt(0).idxmax(axis=1).apply(lambda x: int(x.split('_')[2]) - 1)
     data['MONTHS_SINCE_LAST_REVOLVER'] = data['MONTHS_SINCE_LAST_REVOLVER'].where(df_3_rev.gt(0).any(axis=1), len(revolver_columns))
+    
+    data['OS_INCREASING_1']=  (data['TOTAL_OS_1'] > data['TOTAL_OS_2']).astype(int)
+    data['OS_INCREASING_2']=  (data['TOTAL_OS_2'] > data['TOTAL_OS_3']).astype(int)
+    data['OS_INCREASING_3']=  (data['TOTAL_OS_3'] > data['TOTAL_OS_4']).astype(int)
+    data['OS_INCREASING_4']=  (data['TOTAL_OS_4'] > data['TOTAL_OS_5']).astype(int)
+    data['OS_INCREASING_5']=  (data['TOTAL_OS_5'] > data['TOTAL_OS_6']).astype(int)
+    
+    os_increasing_columns = ['OS_INCREASING_1', 'OS_INCREASING_2', 'OS_INCREASING_3', 'OS_INCREASING_4', 'OS_INCREASING_5']
+    df_3_os_inc = data[os_increasing_columns]
+    
+    data['MONTHS_SINCE_OS_NOT_INCREASED'] = df_3_os_inc.eq(0).idxmax(axis=1).apply(lambda x: int(x.split('_')[2]) - 1)
+    data['MONTHS_SINCE_OS_NOT_INCREASED'] = data['MONTHS_SINCE_OS_NOT_INCREASED'].where(df_3_os_inc.eq(0).any(axis=1), len(os_increasing_columns))
+    
 
     return data
         
